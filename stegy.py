@@ -17,9 +17,11 @@
 # along with PyStegy.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import subprocess
+import shlex
 from PyQt4 import QtCore, QtGui
 from stegy_ui import Ui_Stegy
-from PyQt4.QtGui import QFileDialog,QPixmap
+from PyQt4.QtGui import QFileDialog,QPixmap,QMessageBox
 
 class Stegyapp(QtGui.QMainWindow,Ui_Stegy):
     def __init__(self, parent =None):
@@ -27,6 +29,9 @@ class Stegyapp(QtGui.QMainWindow,Ui_Stegy):
         self.setupUi(self)
         self.algo_name = ('rijndael-128','cast-128', 'gost','twofish','arcfour','cast-256','loki97','rijndael-192','saferplus','wake','des','rijndael-256','serpent','xtea','blowfish','enigma','rc2','tripledes')
         self.algo_modes = ('cbc','cfb','ctr','ecb','ncfb','nofb','ofb')
+        self.CoverFile = ""
+        self.StegoFile = ""
+        self.EmbedFile = ""
         for aname in self.algo_name:
             self.algo_comboBox.addItem(aname)
 
@@ -56,8 +61,40 @@ class Stegyapp(QtGui.QMainWindow,Ui_Stegy):
         if self.StegoFile != "":
             self.est_lineEdit.setText(self.StegoFile)
 
-    def embed():
-        pass
+    def showError(self,value):
+        QMessageBox.critical(self,"Error",value);
+
+    def embed(self):
+        if self.CoverFile == "":
+            self.showError("No Cover File Found")
+        elif self.EmbedFile == "":
+            self.showError("No Embed File Found")
+        elif self.pass_lineEdit.text() == "":
+            self.showError("No Passphrase entered")
+        else:
+            covFile = ' -cf "' + self.CoverFile + '"' #Cover File
+            embedFile = ' -ef "' + self.EmbedFile + '"' #Embed File
+            encRypt = " -e " + self.algo_comboBox.currentText() + " " + self.mode_comboBox.currentText()
+            passFrase = " -p " + self.pass_lineEdit.text()
+            if self.compress_checkBox.isChecked():
+                comPress = " -z " + str(self.complevelspinBox.value())
+            else:
+                comPress = " -Z"
+            if self.nocrc32_checkBox.isChecked():
+                checkSum = " -K"
+            else:
+                checkSum = ""
+            if self.efn_checkBox.isChecked():
+                origName = " -N"
+            else:
+                origName = ""
+            command = "steghide embed" + covFile + embedFile + encRypt + passFrase + comPress + checkSum + origName
+            args = shlex.split(str(command))
+            ret_value=subprocess.call(args)
+            if ret_value == 0:
+                QMessageBox.information(self,"Success","Stego File Created Successfully")
+            else:
+                self.showError("Error in Creation of Stego File")
 
     def extract():
         pass
