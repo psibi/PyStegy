@@ -57,7 +57,7 @@ class Stegyapp(QtGui.QMainWindow,Ui_Stegy):
                 self.mode_comboBox.addItem(entries)
 
     def getStegoFile(self):
-        self.StegoFile = QFileDialog.getOpenFileName(self, "Get Embed File", ".", "Stego Files (*.jpg *.bmp *.wav *.au")
+        self.StegoFile = QFileDialog.getOpenFileName(self, "Get Stego File", ".", "Stego Files (*.jpg *.bmp *.wav *.au *.jpeg)")
         if self.StegoFile != "":
             self.est_lineEdit.setText(self.StegoFile)
 
@@ -96,8 +96,27 @@ class Stegyapp(QtGui.QMainWindow,Ui_Stegy):
             else:
                 self.showError("Error in Creation of Stego File")
 
-    def extract():
-        pass
+    def extract(self):
+        if self.est_lineEdit.text() == "":
+            self.showError("No Stego File Loaded")
+        elif not self.uon_checkBox.isChecked() and self.of_lineEdit.text() == "":
+            self.showError("Output File Name not written")
+        elif self.key_lineEdit.text() == "":
+            self.showError("Key not Given")
+        else:
+            stegFile = ' -sf ' + self.est_lineEdit.text()
+        if self.uon_checkBox.isChecked():
+            outFile = " -f"
+        else:
+            outFile = ' -xf "' + self.of_lineEdit.text() + '"'
+        passPhrase = " -p " + self.key_lineEdit.text()
+        command = "steghide extract" + stegFile + outFile + passPhrase
+        args = shlex.split(str(command))
+        ret_value = subprocess.call(args)
+        if ret_value == 0:
+            QMessageBox.information(self, "Success", "Information Extracted Successfully")
+        else:
+            self.showError("Could not extract any data with that Key!")
         
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
